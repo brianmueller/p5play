@@ -16,7 +16,7 @@
         <script>
 
             let player1, player2, player3, player4;
-            let allPlayers, activePlayers, floor, txt;
+            let allPlayers, activePlayers, floor1, floor2, txt;
             let playerSize = 50;
             let xVel = 0.1;
             let yVel = 2;
@@ -26,8 +26,10 @@
                 // new Canvas(500,500);
                 world.gravity.y = 10;
 
-                floor = new Sprite(width/2, height-25, width*.8, 50, 'static');
-                floor.color = "black";
+                floor1 = new Sprite(width*0.26, height-25, width*0.3, 50, 'static');
+                floor1.color = "black";
+                floor2 = new Sprite(width*0.7, height-25, width*0.3, 50, 'static');
+                floor2.color = "black";
 
                 txt = new Sprite(width/2, height/2, width/2, 50, 'static');
                 txt.color = "lightgray";
@@ -81,7 +83,7 @@
                         checkGameOver();
                     }
                     // floor
-                    if(player.colliding(floor)){
+                    if(player.colliding(floor1) || player.colliding(floor2)){
                         player.jumped = false;
                     }
                 });
