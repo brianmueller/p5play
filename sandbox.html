@@ -13,6 +13,7 @@
         <script src="https://p5play.org/v3/p5play.js"></script>
         <script src="vendor/gamecontroller.min.js"></script>
         <script>
+
             function setup() {
                 createCanvas(400, 400);
 
@@ -22,6 +23,23 @@
                 background(220);
 
             }
+
+            function keyPressed(){
+                console.log(key)
+            }
+
+            gameControl.on('connect', gamepad => {
+                if (gamepad.id < 4) {
+                    gamepad.on('up', function() {
+                        // pong.movePaddle(gamepad.id, -1);
+                        console.log(gamepad.id);
+                    });
+                    gamepad.on('down', function() {
+                        // pong.movePaddle(gamepad.id, 1);
+                    });
+                    // gamepad.on('start', pong.restart);
+                }
+            });
         </script>
     </body>
 </html>
