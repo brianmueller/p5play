@@ -10,19 +10,20 @@
     <body>
         <!-- <script src="script.js"></script> -->
         <script src="https://cdn.jsdelivr.net/npm/p5@1.6.0/lib/p5.js"></script>
+        <script src="https://p5play.org/v3/planck.min.js"></script>
         <script src="https://p5play.org/v3/p5play.js"></script>
         <script src="vendor/gamecontroller.min.js"></script>
         <script>
 
             let player1, player2;
             let players, floor, txt;
-            let playerSize = 50;
+            let playerSize = 100;
             let xVel = 0.1;
-            let yVel = 5;
+            let yVel = 2.5;
 
             function setup() {
-                // new Canvas(displayWidth*0.99, displayHeight*0.98);
-                new Canvas(800,600);
+                new Canvas(windowWidth*0.99, windowHeight*0.9);
+                // new Canvas(500,500);
                 world.gravity.y = 10;
 
                 floor = new Sprite(width/2, height-25, width*.8, 50, 'static');
@@ -52,22 +53,13 @@
                     player.textColor = "white";
                     player.textSize = playerSize;
                     player.strokeWeight = 0;
-                })
+                });
 
             }
 
             function draw() {
                 background("lightgray");
 
-                // player 1
-                if(kb.pressing('d')){ // right
-                    player1.vel.x += xVel;
-                } else if(kb.pressing('a')){ // left
-                    player1.vel.x -= xVel;
-                }
-                if(player1.colliding(floor)){
-                    player1.jumped = false;
-                }
                 if(!player1.jumped && kb.presses('w')){ // up
                     player1.vel.y -= yVel;
                     player1.jumped = true;
@@ -87,14 +79,32 @@
                     player2.jumped = true;
                 }
 
-                // check for fall
+                // check for fall/floor
                 players.forEach(function(player){
+                    // fall
                     if(player.y > height+playerSize/2){
                         players.splice(players.indexOf(player),1);
                         checkGameOver();
                     }
+                    // floor
+                    if(player.colliding(floor)){
+                        player.jumped = false;
+                    }
                 });
 
+            }
+
+            function movePlayer(id, direction){
+                let player = players[id];
+                if(direction == 'left'){
+                    player.vel.x -= xVel;
+                } else if(direction == 'right'){
+                    player.vel.x += xVel;
+                }
+                if(!player.jumped && direction == 'up'){
+                    player.vel.y -= yVel;
+                    player.jumped = true;
+                }
             }
 
             function checkGameOver(){
@@ -111,10 +121,45 @@
             }
 
             function mousePressed(){
-                // let fs = fullscreen();
-                // fullscreen(!fs);
+                let fs = fullscreen();
+                fullscreen(!fs);
+                // location.reload();
+            }
+
+            function keyPressed(){
                 location.reload();
             }
+
+            gameControl.on('connect', gamepad => {
+                if (gamepad.id < 4) {
+                    gamepad.on('left', function() {
+                        // console.log(gamepad.id + " left");
+                        movePlayer(gamepad.id, 'left');
+                    });
+                    gamepad.on('right', function() {
+                        movePlayer(gamepad.id, 'right');
+                    });
+                    gamepad.on('button0', function() { // A
+                        movePlayer(gamepad.id, 'up');
+                    });
+                    // gamepad.on('start', location.reload(););
+                }
+            });
+
+            // gameControl.on('connect', gamepad => {
+            //     if (gamepad.id < 4) {
+            //         gamepad.on('left', function() {
+            //             // pong.movePaddle(gamepad.id, -1);
+            //             console.log(gamepad.id + ' left');
+            //         });
+            //         gamepad.on('right', function() {
+            //             // pong.movePaddle(gamepad.id, 1);
+            //             console.log(gamepad.id + ' right');
+            //         });
+            //         // gamepad.on('start', pong.restart);
+            //     }
+            // });
+
 
 
         </script>
