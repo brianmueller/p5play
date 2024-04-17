@@ -129,6 +129,7 @@
             }
 
             gameControl.on('connect', gamepad => {
+                console.log("gamepad connected!!!");
                 if (gamepad.id < 4) {
                     gamepad.on('left', function() {
                         // console.log(gamepad.id + " left");
