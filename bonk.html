@@ -29,12 +29,12 @@
             }
 
             function setup() {
-                new Canvas(windowWidth*0.99, windowHeight*0.9);
+                new Canvas(windowWidth*0.99, windowHeight*0.85);
                 // new Canvas(500,500);
                 world.gravity.y = 10;
 
                 // floor = new Sprite(width/2, height-25, width*0.05, 50, 'static');
-                floor = new Sprite(0, height-25, width*0.00, 50, 'static');
+                floor = new Sprite(0, height-25, width*0.00, 50, 'none');
                 floor.color = "black";
 
                 txt = new Sprite(width/2, height/2, width/2, 50, 'static');
@@ -118,10 +118,10 @@
                         '....................',
                         '.........==.........',
                     ],
-                    width/20-width/40,
-                    10,
+                    0,
+                    height/10,
                     bricks.w + 2,
-                    bricks.h + 2 + height/12
+                    bricks.h + height/15
                 );
 
             }
