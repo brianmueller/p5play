@@ -80,6 +80,7 @@
 
                 allPlayers.forEach(function(player){
                     player.jumped = true;
+                    player.forced = false;
                     player.color = "gray";
                     // player.textColor = "white";
                     player.textSize = playerSize;
@@ -130,9 +131,11 @@
                     // floor
                     if(player.colliding(floor)){
                         player.jumped = false;
+                        player.forced = false;
                     }
                     if(player.colliding(bricks)){
                         player.jumped = false;
+                        player.forced = false;
                     }
                 });
 
@@ -166,12 +169,21 @@
                 let player = allPlayers[id];
                 if(direction == 'left'){
                     player.vel.x -= xVel;
-                } else if(direction == 'right'){
+                    return;
+                }
+                if(direction == 'right'){
                     player.vel.x += xVel;
+                    return;
                 }
                 if(!player.jumped && direction == 'up'){
                     player.vel.y -= yVel;
                     player.jumped = true;
+                    return;
+                }
+                if(!player.forced && direction == 'down'){
+                    player.vel.y += yVel/2;
+                    player.forced = true;
+                    return;
                 }
             }
 
@@ -209,6 +221,8 @@
                     } else {
                         movePlayer(4, 'up');
                     }
+                } else if(keyCode == 83){
+                    movePlayer(4, 'down');
                 }
 
                 // Player 6 (id: 5)
