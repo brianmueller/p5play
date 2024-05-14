@@ -28,7 +28,7 @@
                 // new Canvas(500,500);
                 world.gravity.y = 10;
 
-                floor = new Sprite(width/2, height-25, width*.1, 50, 'static');
+                floor = new Sprite(width/2, height-25, width*.05, 50, 'static');
                 floor.color = "black";
 
                 txt = new Sprite(width/2, height/2, width/2, 50, 'static');
@@ -86,7 +86,7 @@
                     player.textSize = playerSize;
                     player.strokeWeight = 0;
                     player.active = false;
-                    player.collider = 'static';
+                    player.collider = 'none';
                 });
 
                 bricks = new Group();
@@ -99,7 +99,7 @@
                 tilesGroup = new Tiles(
                     [
                         // '..........',
-                        '====================',
+                        '....................',
                         '....................',
                         '.==..==..==..==..==.',
                         '....................',
@@ -159,6 +159,11 @@
                     movePlayer(5, 'right');
                 }
 
+                if(frameCount % 60 == 0){
+                    let randomBrick = bricks[Math.floor(random(bricks.length))]
+                    randomBrick.collider = 'dynamic';
+                }
+
             }
 
             function startPlayer(id){
@@ -176,7 +181,12 @@
                     return;
                 }
                 if(!player.jumped && direction == 'up'){
-                    player.vel.y -= yVel;
+                    if(id < 4){ // controller
+                        player.vel.y -= yVel/3;
+                    } else { // keyboard
+                        player.vel.y -= yVel;
+                    }
+                    
                     player.jumped = true;
                     return;
                 }
@@ -222,7 +232,7 @@
                         movePlayer(4, 'up');
                     }
                 } else if(keyCode == 83){
-                    movePlayer(4, 'down');
+                    // movePlayer(4, 'down');
                 }
 
                 // Player 6 (id: 5)
@@ -236,17 +246,19 @@
                     } else {
                         movePlayer(5, 'up');
                     }
+                } else if(keyCode == 40){
+                    // movePlayer(5, 'down');
                 }
             }
 
             gameControl.on('connect', gamepad => {
                 console.log("gamepad connected!!!");
                 if (gamepad.id < 4) {
-                    gamepad.on('left', function() {
+                    gamepad.on('l1', function() {
                         // console.log(gamepad.id + " left");
                         movePlayer(gamepad.id, 'left');
                     });
-                    gamepad.on('right', function() {
+                    gamepad.on('r1', function() {
                         movePlayer(gamepad.id, 'right');
                     });
                     gamepad.on('button0', function() { // A
