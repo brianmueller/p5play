@@ -20,7 +20,7 @@
             let allPlayers, activePlayers, floor, txt;
             let playerSize = 50;
             let xVel = 0.1;
-            let yVel = 7;
+            let yVel = 8;
             let bricks, tilesGroup;
 
             function setup() {
@@ -28,7 +28,7 @@
                 // new Canvas(500,500);
                 world.gravity.y = 10;
 
-                floor = new Sprite(width/2, height-25, width*.8, 50, 'static');
+                floor = new Sprite(width/2, height-25, width*.1, 50, 'static');
                 floor.color = "black";
 
                 txt = new Sprite(width/2, height/2, width/2, 50, 'static');
@@ -89,28 +89,29 @@
                 });
 
                 bricks = new Group();
-                bricks.w = 50;
+                bricks.w = width/10;
                 bricks.h = 10;
                 bricks.tile = '=';
                 bricks.collider = 'static';
+                bricks.color = 'black';
 
                 tilesGroup = new Tiles(
                     [
-                        '=====...======',
-                        '======..======',
-                        '==..==..==....',
-                        '==..==..==....',
-                        '======..=====.',
-                        '=====...======',
-                        '==..........==',
-                        '==..........==',
-                        '==......======',
-                        '==......=====.'
+                        // '..........',
+                        '==========',
+                        '..........',
+                        '..........',
+                        '.=.=.=.=..',
+                        '..........',
+                        '..=.=.=.=.',
+                        '..........',
+                        '.=.=.=.=..',
+                        '..........',
                     ],
-                    200,
-                    400,
-                    bricks.w + 4,
-                    bricks.h + 4
+                    width/10-width/20,
+                    10,
+                    bricks.w + 2,
+                    bricks.h + 2 + height/10
                 );
 
             }
