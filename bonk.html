@@ -218,11 +218,11 @@
                     return;
                 }
                 if(!player.jumped && direction == 'up'){
-                    if(id < 4){ // controller
-                        player.vel.y -= yVel/3;
-                    } else { // keyboard
+                    // if(id < 4){ // controller
+                        // player.vel.y -= yVel/3;
+                    // } else { // keyboard
                         player.vel.y -= yVel;
-                    }
+                    // }
                     
                     player.jumped = true;
                     return;
