@@ -86,6 +86,7 @@
 
                 allPlayers.forEach(function(player){
                     player.jumped = true;
+                    player.jumpedFrame =
                     player.forced = false;
                     player.color = "gray";
                     // player.textColor = "white";
@@ -255,7 +256,9 @@
             }
 
             function keyPressed(){
-                // location.reload();
+                if(keyCode == 32){
+                    location.reload();
+                }
 
                 // Player 5 (id: 4)
                 if(keyCode == 87){
