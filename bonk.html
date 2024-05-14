@@ -22,13 +22,19 @@
             let xVel = 0.1;
             let yVel = 8;
             let bricks, tilesGroup;
+            let disappearTaps = 10;
+            let settings = {
+                shrink: true,
+                // taps: true,
+            }
 
             function setup() {
                 new Canvas(windowWidth*0.99, windowHeight*0.9);
                 // new Canvas(500,500);
                 world.gravity.y = 10;
 
-                floor = new Sprite(width/2, height-25, width*.05, 50, 'static');
+                // floor = new Sprite(width/2, height-25, width*0.05, 50, 'static');
+                floor = new Sprite(0, height-25, width*0.00, 50, 'static');
                 floor.color = "black";
 
                 txt = new Sprite(width/2, height/2, width/2, 50, 'static');
@@ -94,7 +100,8 @@
                 bricks.h = 10;
                 bricks.tile = '=';
                 bricks.collider = 'static';
-                bricks.color = 'black';
+                bricks.taps = 0;
+                bricks.color = color(bricks.taps,0,0);
 
                 tilesGroup = new Tiles(
                     [
@@ -109,6 +116,7 @@
                         '....................',
                         '.......==..==.......',
                         '....................',
+                        '.........==.........',
                     ],
                     width/20-width/40,
                     10,
@@ -137,7 +145,36 @@
                         player.jumped = false;
                         player.forced = false;
                     }
+                    
+                    if(settings.shrink){
+                        player.colliding(bricks,shrink);
+                    }
+                    if(settings.taps){
+                        player.colliding(bricks,tap);
+                    }
+                    
+                    
+
+                    // bricks.forEach(function(brick){
+                    //     brick.w += 0.1;
+                    //     brick.w = constrain(brick.w,0,width/20)
+                    // })
                 });
+
+                function shrink(player,brick){
+                    brick.w -= 5;
+                    if(brick.w < 5){
+                        brick.remove()
+                    }
+                }
+
+                function tap(player,brick){
+                    brick.taps++;
+                    brick.color = color(brick.taps*255/disappearTaps,0,0);
+                    if(brick.taps > disappearTaps){
+                        brick.remove();
+                    }
+                }
 
                 // for (let brick of bricks) {
                 //     if (brick.mouse.hovers()) {
@@ -161,7 +198,7 @@
 
                 if(frameCount % 60 == 0){
                     let randomBrick = bricks[Math.floor(random(bricks.length))]
-                    randomBrick.collider = 'dynamic';
+                    // randomBrick.collider = 'dynamic';
                 }
 
             }
