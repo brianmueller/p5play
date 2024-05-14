@@ -129,6 +129,9 @@
                     if(player.colliding(floor)){
                         player.jumped = false;
                     }
+                    if(player.colliding(bricks)){
+                        player.jumped = false;
+                    }
                 });
 
                 // for (let brick of bricks) {
