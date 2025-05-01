@@ -6,50 +6,52 @@ world.gravity.y = 0;
 let myPlayer;
 let otherPlayer;
 let players = {};
-let circleRadius = 300;
 let centerX = 400, centerY = 300;
+const force = 5;
 
-myPlayer = new Sprite(width/2, height/2, 30);
+myPlayer = new Sprite();
+myPlayer.diameter = 30;
 myPlayer.color = 'red';
 
-otherPlayer = new Sprite(random(width), random(height), 30);
+otherPlayer = new Sprite();
+otherPlayer.diameter = 30;
 otherPlayer.color = 'blue';
 
+myPlayer.friction = 0.1; // add some friction to slow down naturally
+myPlayer.drag = 0.1;     // drag also helps simulate air resistance
+
+otherPlayer.friction = 0.1;
+otherPlayer.drag = 0.1;
 
 q.update = () => {
 	background('skyblue');
 
-	otherPlayer.x = mouse.x;
-	otherPlayer.y = mouse.y;
-
+	// Control with arrow keys (inertia-based)
 	if (kb.pressing('up')) {
-		myPlayer.vel.x = 0;
-		myPlayer.vel.y = -5;
-	} else if (kb.pressing('down')) {
-		myPlayer.vel.x = 0;
-		myPlayer.vel.y = 5;
-	} else if (kb.pressing('left')) {
-		myPlayer.vel.x = -5;
-		myPlayer.vel.y = 0;
-	} else if (kb.pressing('right')) {
-		myPlayer.vel.x = 5;
-		myPlayer.vel.y = 0;
-	} else {
-		myPlayer.vel.x = 0;
-		myPlayer.vel.y = 0;
+		myPlayer.applyForce(0, -1*force);
+	}
+	if (kb.pressing('down')) {
+		myPlayer.applyForce(0, force);
+	}
+	if (kb.pressing('left')) {
+		myPlayer.applyForce(-1*force, 0);
+	}
+	if (kb.pressing('right')) {
+		myPlayer.applyForce(force, 0);
 	}
 
-	if (kb.pressing('w')) { // up
-		otherPlayer.vel.y = -5;
-	} else if (kb.pressing('s')) { // down
-		otherPlayer.vel.y = 5;
-	} else if (kb.pressing('a')) { // left
-		otherPlayer.vel.x = -5;
-	} else if (kb.pressing('d')) { // right
-		otherPlayer.vel.x = 5;
-	} else {
-		otherPlayer.vel.x = 0;
-		otherPlayer.vel.y = 0;
+	// WASD control for otherPlayer
+	if (kb.pressing('i')) { // up
+		otherPlayer.applyForce(0, -1*force);
+	}
+	if (kb.pressing('k')) { // down
+		otherPlayer.applyForce(0, force);
+	}
+	if (kb.pressing('j')) { // left
+		otherPlayer.applyForce(-1*force, 0);
+	}
+	if (kb.pressing('l')) { // right
+		otherPlayer.applyForce(force, 0);
 	}
 };
 
