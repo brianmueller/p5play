@@ -5,7 +5,7 @@
 	<meta charset="UTF-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 	<link rel="icon" href="favicon.png">
-	<title>p5play</title>
+	<title>Sumo</title>
 	<style>
 		html,
 		body {
@@ -25,15 +25,84 @@
 	<script src="https://p5play.org/v3/planck.min.js"></script>
 	<script src="https://p5play.org/v3/p5play.js"></script>
 
-	<!-- OFFLINE LINKS -->
-	<!--
-	<script src="node_modules/q5/q5.js"></script>
-	<script src="node_modules/p5play/planck.min.js"></script>
-	<script src="node_modules/p5play/p5play.js"></script>
-	-->
+	<script type="module">
+		import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+		import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
 
-	<!-- YOUR SKETCH -->
-	<script type="module" src="sketch.js"></script>
+		// Firebase config
+		const firebaseConfig = {
+			apiKey: "AIzaSyCHBj9sIbIyOIWmz9rRH4Xu12vLPt5Wpbc",
+			authDomain: "test1-db831.firebaseapp.com",
+			databaseURL: "https://test1-db831.firebaseio.com",
+			projectId: "test1-db831",
+			storageBucket: "test1-db831.appspot.com",
+			messagingSenderId: "634851022051",
+			appId: "1:634851022051:web:480ef46b74be4c22f8e1d6"
+		};
+
+		// Initialize Firebase
+		const app = initializeApp(firebaseConfig);
+		const db = getDatabase(app);
+		const playersRef = ref(db, 'players');
+
+		// Generate unique player ID and color
+		const playerId = `player-${Math.random().toString(36).substr(2, 9)}`;
+		const myColor = '#' + Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0');
+
+		// Setup canvas and game
+		let q = await Q5.WebGPU();
+		new Canvas(1000, 800);
+		world.gravity.y = 0;
+
+		let myPlayer = new Sprite();
+		myPlayer.diameter = 30;
+		myPlayer.color = myColor;
+		myPlayer.friction = 0.1;
+		myPlayer.drag = 0.1;
+
+		let players = {}; // Other players
+
+		// Sync this player's position and color to Firebase
+		function syncMyPlayer() {
+			set(ref(db, `players/${playerId}`), {
+				x: myPlayer.x,
+				y: myPlayer.y,
+				color: myColor
+			});
+		}
+
+		// Listen for player updates from Firebase
+		onValue(playersRef, snapshot => {
+			const data = snapshot.val() || {};
+			for (let id in data) {
+				if (id === playerId) continue;
+
+				if (!players[id]) {
+					players[id] = new Sprite();
+					players[id].diameter = 30;
+					players[id].friction = 0.1;
+					players[id].drag = 0.1;
+				}
+
+				players[id].x = data[id].x;
+				players[id].y = data[id].y;
+				players[id].color = data[id].color || 'blue';
+			}
+		});
+
+		// Game loop
+		const force = 5;
+		q.update = () => {
+			background('skyblue');
+
+			if (kb.pressing('up')) myPlayer.applyForce(0, -force);
+			if (kb.pressing('down')) myPlayer.applyForce(0, force);
+			if (kb.pressing('left')) myPlayer.applyForce(-force, 0);
+			if (kb.pressing('right')) myPlayer.applyForce(force, 0);
+
+			syncMyPlayer();
+		};
+	</script>
 </body>
 
 </html>
