@@ -2,107 +2,140 @@
 <html>
 
 <head>
-	<meta charset="UTF-8" />
-	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-	<link rel="icon" href="favicon.png">
-	<title>Sumo</title>
-	<style>
-		html,
-		body {
-			background-color: black;
-			margin: 0;
-			padding: 0;
-			overscroll-behavior: none;
-		}
-	</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" href="favicon.png">
+  <title>Sumo</title>
+  <style>
+    html,
+    body {
+      background-color: black;
+      margin: 0;
+      padding: 0;
+      overscroll-behavior: none;
+    }
+
+    #namePrompt {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: white;
+      font-size: 20px;
+      text-align: center;
+    }
+  </style>
 </head>
 
 <body>
-	<main></main>
+  <main></main>
 
-	<!-- ONLINE LINKS -->
-	<script src="https://q5js.org/q5.js"></script>
-	<script src="https://p5play.org/v3/planck.min.js"></script>
-	<script src="https://p5play.org/v3/p5play.js"></script>
+  <div id="namePrompt">
+    <label for="playerName">Enter your name:</label>
+    <input type="text" id="playerName" />
+    <button onclick="startGame()">Start</button>
+  </div>
 
-	<script type="module">
-		import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-		import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
+  <!-- ONLINE LINKS -->
+  <script src="https://q5js.org/q5.js"></script>
+  <script src="https://p5play.org/v3/planck.min.js"></script>
+  <script src="https://p5play.org/v3/p5play.js"></script>
 
-		// Firebase config
-		const firebaseConfig = {
-			apiKey: "AIzaSyCHBj9sIbIyOIWmz9rRH4Xu12vLPt5Wpbc",
-			authDomain: "test1-db831.firebaseapp.com",
-			databaseURL: "https://test1-db831.firebaseio.com",
-			projectId: "test1-db831",
-			storageBucket: "test1-db831.appspot.com",
-			messagingSenderId: "634851022051",
-			appId: "1:634851022051:web:480ef46b74be4c22f8e1d6"
-		};
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import {
+      getDatabase,
+      ref,
+      set,
+      onValue,
+      remove
+    } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
 
-		// Initialize Firebase
-		const app = initializeApp(firebaseConfig);
-		const db = getDatabase(app);
-		const playersRef = ref(db, 'players');
+    const firebaseConfig = {
+      apiKey: "AIzaSyCHBj9sIbIyOIWmz9rRH4Xu12vLPt5Wpbc",
+      authDomain: "test1-db831.firebaseapp.com",
+      databaseURL: "https://test1-db831.firebaseio.com",
+      projectId: "test1-db831",
+      storageBucket: "test1-db831.appspot.com",
+      messagingSenderId: "634851022051",
+      appId: "1:634851022051:web:480ef46b74be4c22f8e1d6"
+    };
 
-		// Generate unique player ID and color
-		const playerId = `player-${Math.random().toString(36).substr(2, 9)}`;
-		const myColor = '#' + Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0');
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const playersRef = ref(db, 'players');
 
-		// Setup canvas and game
-		let q = await Q5.WebGPU();
-		new Canvas(1000, 800);
-		world.gravity.y = 0;
+    const playerId = `player-${Math.random().toString(36).substr(2, 9)}`;
+    const myColor = '#' + Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0');
 
-		let myPlayer = new Sprite();
-		myPlayer.diameter = 30;
-		myPlayer.color = myColor;
-		myPlayer.friction = 0.1;
-		myPlayer.drag = 0.1;
+    let playerName = "";
+    let myPlayer;
+    let players = {};
+    let q;
 
-		let players = {}; // Other players
+    // Start game after name is entered
+    window.startGame = async () => {
+      playerName = document.getElementById('playerName').value.trim() || "Anonymous";
+      document.getElementById('namePrompt').style.display = 'none';
 
-		// Sync this player's position and color to Firebase
-		function syncMyPlayer() {
-			set(ref(db, `players/${playerId}`), {
-				x: myPlayer.x,
-				y: myPlayer.y,
-				color: myColor
-			});
-		}
+      q = await Q5.WebGPU();
+      new Canvas(1000, 800);
+      world.gravity.y = 0;
 
-		// Listen for player updates from Firebase
-		onValue(playersRef, snapshot => {
-			const data = snapshot.val() || {};
-			for (let id in data) {
-				if (id === playerId) continue;
+      myPlayer = new Sprite();
+      myPlayer.diameter = 30;
+      myPlayer.color = myColor;
+      myPlayer.friction = 0.1;
+      myPlayer.drag = 0.1;
 
-				if (!players[id]) {
-					players[id] = new Sprite();
-					players[id].diameter = 30;
-					players[id].friction = 0.1;
-					players[id].drag = 0.1;
-				}
+      // Game loop
+      const force = 5;
+      q.update = () => {
+        background('skyblue');
 
-				players[id].x = data[id].x;
-				players[id].y = data[id].y;
-				players[id].color = data[id].color || 'blue';
-			}
-		});
+        if (kb.pressing('up')) myPlayer.applyForce(0, -force);
+        if (kb.pressing('down')) myPlayer.applyForce(0, force);
+        if (kb.pressing('left')) myPlayer.applyForce(-force, 0);
+        if (kb.pressing('right')) myPlayer.applyForce(force, 0);
 
-		// Game loop
-		const force = 5;
-		q.update = () => {
-			background('skyblue');
+        syncMyPlayer();
+      };
 
-			if (kb.pressing('up')) myPlayer.applyForce(0, -force);
-			if (kb.pressing('down')) myPlayer.applyForce(0, force);
-			if (kb.pressing('left')) myPlayer.applyForce(-force, 0);
-			if (kb.pressing('right')) myPlayer.applyForce(force, 0);
+      // Handle disconnect
+      window.addEventListener('beforeunload', () => {
+        remove(ref(db, `players/${playerId}`));
+      });
 
-			syncMyPlayer();
-		};
-	</script>
+      // Listen for other players
+      onValue(playersRef, snapshot => {
+        const data = snapshot.val() || {};
+        for (let id in data) {
+          if (id === playerId) continue;
+
+          if (!players[id]) {
+            players[id] = new Sprite();
+            players[id].diameter = 30;
+            players[id].friction = 0.1;
+            players[id].drag = 0.1;
+          }
+
+          players[id].x = data[id].x;
+          players[id].y = data[id].y;
+          players[id].color = data[id].color || 'blue';
+        }
+      });
+    };
+
+    function syncMyPlayer() {
+      if (!myPlayer) return;
+      set(ref(db, `players/${playerId}`), {
+        x: myPlayer.x,
+        y: myPlayer.y,
+        color: myColor,
+        name: playerName
+      });
+    }
+  </script>
 </body>
 
 </html>
