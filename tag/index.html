@@ -5,7 +5,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="icon" href="favicon.png">
-  <title>Sumo</title>
+  <title>Tag</title>
   <style>
     html,
     body {
@@ -52,13 +52,12 @@
     } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
 
     const firebaseConfig = {
-      apiKey: "AIzaSyCHBj9sIbIyOIWmz9rRH4Xu12vLPt5Wpbc",
-      authDomain: "test1-db831.firebaseapp.com",
-      databaseURL: "https://test1-db831.firebaseio.com",
-      projectId: "test1-db831",
-      storageBucket: "test1-db831.appspot.com",
-      messagingSenderId: "634851022051",
-      appId: "1:634851022051:web:480ef46b74be4c22f8e1d6"
+      apiKey: "AIzaSyBzuQfWx6Ki0JAabhMEOqlGt0WkUWvvHiw",
+      authDomain: "tagg-aead9.firebaseapp.com",
+      projectId: "tagg-aead9",
+      storageBucket: "tagg-aead9.firebasestorage.app",
+      messagingSenderId: "690422245181",
+      appId: "1:690422245181:web:4ad03010536705bdf80754"
     };
 
     const app = initializeApp(firebaseConfig);
@@ -99,6 +98,24 @@
         if (kb.pressing('right')) myPlayer.applyForce(force, 0);
 
         syncMyPlayer();
+
+        // Draw other players' names
+        for (let id in players) {
+          for (let id in players) {
+            let p = players[id];
+            textAlign(CENTER);
+            textSize(14);
+            fill('black');
+            text(p.playerName, p.x, p.y - 25); // Show name above sprite
+          }
+        }
+
+        // Draw my name
+        textAlign(CENTER);
+        textSize(14);
+        fill('black');
+        text(playerName, myPlayer.x, myPlayer.y - 25);
+
       };
 
       // Handle disconnect
@@ -122,6 +139,8 @@
           players[id].x = data[id].x;
           players[id].y = data[id].y;
           players[id].color = data[id].color || 'blue';
+          players[id].playerName = data[id].name || "Player"; // Add this line
+
         }
       });
     };
