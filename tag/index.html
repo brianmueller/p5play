@@ -250,10 +250,11 @@
         background('skyblue');
 
         if (!gameFrozen) {
-          if (kb.pressing('up')) myPlayer.applyForce(0, -force);
-          if (kb.pressing('down')) myPlayer.applyForce(0, force);
-          if (kb.pressing('left')) myPlayer.applyForce(-force, 0);
-          if (kb.pressing('right')) myPlayer.applyForce(force, 0);
+          if (kb.pressing('up') || kb.pressing('w')) myPlayer.applyForce(0, -force);
+          if (kb.pressing('down') || kb.pressing('s')) myPlayer.applyForce(0, force);
+          if (kb.pressing('left') || kb.pressing('a')) myPlayer.applyForce(-force, 0);
+          if (kb.pressing('right') || kb.pressing('d')) myPlayer.applyForce(force, 0);
+
         }
 
         const halfWidth = width / 2;
