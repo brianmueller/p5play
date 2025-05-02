@@ -15,7 +15,8 @@
       overscroll-behavior: none;
     }
 
-    #namePrompt {
+    #namePrompt,
+    #adminPasswordPrompt {
       position: absolute;
       top: 50%;
       left: 50%;
@@ -24,16 +25,51 @@
       font-size: 20px;
       text-align: center;
     }
+
+    #gameWrapper {
+      display: flex;
+      align-items: flex-start;
+      margin: 10px;
+    }
+
+    canvas {
+      border: 2px solid #ccc;
+    }
+
+    #adminDashboard {
+      margin-left: 20px;
+      background: white;
+      color: black;
+      padding: 10px;
+      border-radius: 5px;
+      min-width: 150px;
+    }
   </style>
 </head>
 
 <body>
-  <main></main>
+  <div id="gameWrapper">
+    <main></main>
+    <div id="adminDashboard" style="display: none;">
+      <strong>Admin Dashboard</strong><br />
+      Status: <span id="gameStatus">Loading...</span><br /><br />
+      <button onclick="freezeGame()">Freeze</button>
+      <button onclick="unfreezeGame()">Unfreeze</button>
+      <button onclick="resetGame()">Reset</button>
+    </div>
+  </div>
+
 
   <div id="namePrompt">
     <label for="playerName">Enter your name:</label>
     <input type="text" id="playerName" />
     <button onclick="startGame()">Start</button>
+  </div>
+
+  <div id="adminPasswordPrompt" style="display:none;">
+    <label for="adminPassword">Enter admin password:</label>
+    <input type="password" id="adminPassword" />
+    <button onclick="verifyAdmin()">Login</button>
   </div>
 
   <!-- ONLINE LINKS -->
@@ -48,7 +84,9 @@
       ref,
       set,
       onValue,
-      remove
+      remove,
+      update,
+      onDisconnect
     } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
 
     const firebaseConfig = {
@@ -59,6 +97,21 @@
       messagingSenderId: "690422245181",
       appId: "1:690422245181:web:4ad03010536705bdf80754"
     };
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const nameInput = document.getElementById("playerName");
+      const passwordInput = document.getElementById("adminPassword");
+
+      nameInput.focus();
+      nameInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") startGame();
+      });
+
+      passwordInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") window.verifyAdmin();
+      });
+    });
+
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
@@ -71,12 +124,87 @@
     let myPlayer;
     let players = {};
     let q;
+    let gameFrozen = false;
 
-    // Start game after name is entered
     window.startGame = async () => {
       playerName = document.getElementById('playerName').value.trim() || "Anonymous";
-      document.getElementById('namePrompt').style.display = 'none';
 
+      if (playerName.toLowerCase() === "admin") {
+        document.getElementById("namePrompt").style.display = "none";
+        const pwPrompt = document.getElementById("adminPasswordPrompt");
+        pwPrompt.style.display = "block";
+        document.getElementById("adminPassword").focus();
+        return;
+      }
+
+      document.getElementById("namePrompt").style.display = "none";
+      initializeGame();
+    };
+
+    window.verifyAdmin = function () {
+      const enteredPassword = document.getElementById("adminPassword").value;
+      const tokenRef = ref(db, 'gameState/adminToken');
+
+      onValue(tokenRef, snapshot => {
+        const storedToken = snapshot.val();
+        if (enteredPassword === storedToken) {
+          document.getElementById("adminPasswordPrompt").style.display = "none";
+          document.getElementById("adminDashboard").style.display = "block";
+          initializeGame();
+        } else {
+          alert("Incorrect password.");
+        }
+      }, { onlyOnce: true });
+    };
+
+
+    // Admin functions
+    window.freezeGame = function () {
+      update(ref(db, "gameState"), { frozen: true });
+    };
+
+    window.unfreezeGame = function () {
+      update(ref(db, "gameState"), { frozen: false });
+    };
+
+    window.resetGame = function () {
+      if (!confirm("Are you sure you want to reset the game? This cannot be undone.")) return;
+
+      const playersPath = ref(db, "players");
+      const tokenPath = ref(db, "gameState/adminToken");
+
+      // Step 1: Get current adminToken
+      onValue(tokenPath, (tokenSnap) => {
+        const existingToken = tokenSnap.val();
+
+        // Step 2: Get current players
+        onValue(playersPath, (playersSnap) => {
+          const allPlayers = playersSnap.val() || {};
+          const filteredPlayers = {};
+
+          // Preserve only the admin (by name)
+          for (let id in allPlayers) {
+            if (allPlayers[id].name?.toLowerCase() === "admin") {
+              filteredPlayers[id] = allPlayers[id];
+            }
+          }
+
+          // Step 3: Update DB
+          update(ref(db), {
+            players: filteredPlayers,
+            grid: {},
+            gameState: {
+              frozen: false,
+              adminToken: existingToken
+            }
+          });
+        }, { onlyOnce: true });
+
+      }, { onlyOnce: true });
+    };
+
+
+    async function initializeGame() {
       q = await Q5.WebGPU();
       new Canvas(1200, 800);
       world.gravity.y = 0;
@@ -89,58 +217,78 @@
       myPlayer.x = random(0 - width / 2, width / 2);
       myPlayer.y = random(0 - height / 2, height / 2);
 
-      // Game loop
+      // Sync game frozen state
+      const statusEl = document.getElementById("gameStatus");
+      onValue(ref(db, 'gameState/frozen'), (snapshot) => {
+        gameFrozen = snapshot.val() === true;
+
+        if (statusEl) {
+          statusEl.textContent = gameFrozen ? "Frozen ❄️" : "Active 🔥";
+        }
+
+        // Lock other players when frozen
+        for (let id in players) {
+          const p = players[id];
+          if (p) {
+            if (gameFrozen) {
+              p.vel.x = 0;
+              p.vel.y = 0;
+            }
+          }
+        }
+
+        // Lock current player too
+        if (gameFrozen && myPlayer) {
+          myPlayer.vel.x = 0;
+          myPlayer.vel.y = 0;
+        }
+      });
+
+
       const force = 3;
       q.update = () => {
         background('skyblue');
 
-        if (kb.pressing('up')) myPlayer.applyForce(0, -force);
-        if (kb.pressing('down')) myPlayer.applyForce(0, force);
-        if (kb.pressing('left')) myPlayer.applyForce(-force, 0);
-        if (kb.pressing('right')) myPlayer.applyForce(force, 0);
-        let halfWidth = width / 2;
-        let halfHeight = height / 2;
+        if (!gameFrozen) {
+          if (kb.pressing('up')) myPlayer.applyForce(0, -force);
+          if (kb.pressing('down')) myPlayer.applyForce(0, force);
+          if (kb.pressing('left')) myPlayer.applyForce(-force, 0);
+          if (kb.pressing('right')) myPlayer.applyForce(force, 0);
+        }
 
-        // Bounce off left/right edges
+        const halfWidth = width / 2;
+        const halfHeight = height / 2;
+
         if (myPlayer.x - myPlayer.diameter / 2 <= -halfWidth || myPlayer.x + myPlayer.diameter / 2 >= halfWidth) {
           myPlayer.vel.x *= -0.75;
           myPlayer.x = constrain(myPlayer.x, -halfWidth + myPlayer.diameter / 2, halfWidth - myPlayer.diameter / 2);
         }
 
-        // Bounce off top/bottom edges
         if (myPlayer.y - myPlayer.diameter / 2 <= -halfHeight || myPlayer.y + myPlayer.diameter / 2 >= halfHeight) {
           myPlayer.vel.y *= -0.75;
           myPlayer.y = constrain(myPlayer.y, -halfHeight + myPlayer.diameter / 2, halfHeight - myPlayer.diameter / 2);
         }
 
-
         syncMyPlayer();
 
-        // Draw other players' names
         for (let id in players) {
-          for (let id in players) {
-            let p = players[id];
-            textAlign(CENTER);
-            textSize(14);
-            fill('black');
-            text(p.playerName, p.x, p.y - 25); // Show name above sprite
-          }
+          let p = players[id];
+          textAlign(CENTER);
+          textSize(14);
+          fill('black');
+          text(p.playerName, p.x, p.y - 25);
         }
 
-        // Draw my name
         textAlign(CENTER);
         textSize(14);
         fill('black');
         text(playerName, myPlayer.x, myPlayer.y - 25);
-
       };
 
-      // Handle disconnect
       window.addEventListener('beforeunload', () => {
-        remove(ref(db, `players/${playerId}`));
+        onDisconnect(ref(db, `players/${playerId}`)).remove();
       });
 
-      // Listen for other players
       onValue(playersRef, snapshot => {
         const data = snapshot.val() || {};
         for (let id in data) {
@@ -156,11 +304,10 @@
           players[id].x = data[id].x;
           players[id].y = data[id].y;
           players[id].color = data[id].color || 'blue';
-          players[id].playerName = data[id].name || "Player"; // Add this line
-
+          players[id].playerName = data[id].name || "Player";
         }
       });
-    };
+    }
 
     function syncMyPlayer() {
       if (!myPlayer) return;
