@@ -103,13 +103,13 @@
 
         // Bounce off left/right edges
         if (myPlayer.x - myPlayer.diameter / 2 <= -halfWidth || myPlayer.x + myPlayer.diameter / 2 >= halfWidth) {
-          myPlayer.vel.x *= -1;
+          myPlayer.vel.x *= -0.75;
           myPlayer.x = constrain(myPlayer.x, -halfWidth + myPlayer.diameter / 2, halfWidth - myPlayer.diameter / 2);
         }
 
         // Bounce off top/bottom edges
         if (myPlayer.y - myPlayer.diameter / 2 <= -halfHeight || myPlayer.y + myPlayer.diameter / 2 >= halfHeight) {
-          myPlayer.vel.y *= -1;
+          myPlayer.vel.y *= -0.75;
           myPlayer.y = constrain(myPlayer.y, -halfHeight + myPlayer.diameter / 2, halfHeight - myPlayer.diameter / 2);
         }
 
