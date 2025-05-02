@@ -78,7 +78,7 @@
       document.getElementById('namePrompt').style.display = 'none';
 
       q = await Q5.WebGPU();
-      new Canvas(1000, 800);
+      new Canvas(1200, 800);
       world.gravity.y = 0;
 
       myPlayer = new Sprite();
@@ -86,9 +86,11 @@
       myPlayer.color = myColor;
       myPlayer.friction = 0.1;
       myPlayer.drag = 0.1;
+      myPlayer.x = random(0 - width / 2, width / 2);
+      myPlayer.y = random(0 - height / 2, height / 2);
 
       // Game loop
-      const force = 5;
+      const force = 3;
       q.update = () => {
         background('skyblue');
 
@@ -96,6 +98,21 @@
         if (kb.pressing('down')) myPlayer.applyForce(0, force);
         if (kb.pressing('left')) myPlayer.applyForce(-force, 0);
         if (kb.pressing('right')) myPlayer.applyForce(force, 0);
+        let halfWidth = width / 2;
+        let halfHeight = height / 2;
+
+        // Bounce off left/right edges
+        if (myPlayer.x - myPlayer.diameter / 2 <= -halfWidth || myPlayer.x + myPlayer.diameter / 2 >= halfWidth) {
+          myPlayer.vel.x *= -1;
+          myPlayer.x = constrain(myPlayer.x, -halfWidth + myPlayer.diameter / 2, halfWidth - myPlayer.diameter / 2);
+        }
+
+        // Bounce off top/bottom edges
+        if (myPlayer.y - myPlayer.diameter / 2 <= -halfHeight || myPlayer.y + myPlayer.diameter / 2 >= halfHeight) {
+          myPlayer.vel.y *= -1;
+          myPlayer.y = constrain(myPlayer.y, -halfHeight + myPlayer.diameter / 2, halfHeight - myPlayer.diameter / 2);
+        }
+
 
         syncMyPlayer();
 
